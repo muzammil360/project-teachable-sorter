@@ -145,6 +145,7 @@ if __name__ == '__main__':
         mode = "sort"
     else:
         mode = "train"
+        engine = []
 
     #  parse filter type
     if args.zone: filter_type = 'zone'
@@ -176,8 +177,13 @@ if __name__ == '__main__':
             pil_im.transpose(Image.FLIP_LEFT_RIGHT)
             cv2.imshow('frame', cv2_im)
             # make sure first arg to on_new_frame() is the image. original code misses it
-            on_new_frame(cv2_im, engine, mean, sliding_window, send_over_ws, cam_sockets)
-            if cv2.waitKey(1) & 0xff  == ord('q'):
+            print('camera loop running')
+            try:
+                on_new_frame(cv2_im, engine, mean, sliding_window, send_over_ws, cam_sockets)
+            except Exception as exp:
+                print('exception msg: {}'.format(str(exp)))
+            
+            if (cv2.waitKey(1) & 0xff) == ord('q'):
                 break
         cap.release()
         cv2.destroyAllWindows()
