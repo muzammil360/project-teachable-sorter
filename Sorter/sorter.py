@@ -169,16 +169,15 @@ if __name__ == '__main__':
             ret,frame = cap.read()
             if  not ret:
                 break
-            cv2_im  = frame
-            pil_im = Image.fromArray(cv2_im)
-            pil_im.resize(224, 224)
+            cv2_im = frame
+            pil_im = Image.fromarray(cv2_im)
+            pil_im.resize((224, 224))
             pil_im.transpose(Image.FLIP_LEFT_RIGHT)
             cv2.imshow('frame', cv2_im)
-            on_new_frame(engine, mean, sliding_window, send_over_ws, cam_sockets)
+            # make sure first arg to on_new_frame() is the image. original code misses it
+            on_new_frame(cv2_im, engine, mean, sliding_window, send_over_ws, cam_sockets)
             if cv2.waitKey(1) & 0xff  == ord('q'):
                 break
         cap.release()
         cv2.destroyAllWindows()
         print('Initializing opencv Video Stream')
-
-
