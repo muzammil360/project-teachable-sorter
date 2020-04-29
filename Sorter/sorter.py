@@ -43,6 +43,8 @@ filter_type = 'zone'
 # biquad params : type, Fc, Q, peakGainDB
 bq = BiQuadFilter('band', 0.1, 0.707, 0.0)
 def send_over_ws(msg, cam_sockets):
+    print("len(cam_sockerts)= {}".format(len(cam_sockets)))
+    print("cam_sockerts= {}".format(cam_sockets))
     for ws in cam_sockets:
         ws.write_message(msg)
 
@@ -88,6 +90,8 @@ def on_new_frame(cv_mat, engine, mean, sliding_window, send_over_ws, cam_sockets
     width, height = img_pil.size
 
     is_good_frame = is_good_photo(cv_mat, width, height, mean, sliding_window)
+    is_good_frame = True
+
     print('is_good_frame: {}'.format(is_good_frame))
     if (is_good_frame):
         # NOTE: Teachable Machine 2 works on images of size 224x224 and will resize all inputs
