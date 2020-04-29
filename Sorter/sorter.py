@@ -30,12 +30,14 @@ import cv2
 import argparse
 import sys
 import RPi.GPIO as GPIO
+import time
 # Path to edgetpu compatible model
 model_path = '../model.tflite'
 
 # NOTE: can either be 'train' to classify images using edgetpu or 'sort' to just send images to TM2
 mode = "sort"
 sendPin = 7
+t0 = 0              # camera fps start
 GPIO.setwarnings(False)
 GPIO.setmode(GPIO.BOARD)
 GPIO.setup(sendPin, GPIO.OUT, initial=GPIO.LOW)
@@ -90,9 +92,8 @@ def on_new_frame(cv_mat, engine, mean, sliding_window, send_over_ws, cam_sockets
     width, height = img_pil.size
 
     is_good_frame = is_good_photo(cv_mat, width, height, mean, sliding_window)
-    is_good_frame = True
-
     print('is_good_frame: {}'.format(is_good_frame))
+
     if (is_good_frame):
         # NOTE: Teachable Machine 2 works on images of size 224x224 and will resize all inputs
         # to that size. so we have to make sure our edgetpu converted model is fed similar images.
@@ -187,6 +188,12 @@ if __name__ == '__main__':
             except Exception as exp:
                 print('exception msg: {}'.format(str(exp)))
             
+            t1 = time.time()    # get current time
+            elasped = t1 - t0   # get difference
+            t0 = t1             # update t0
+            fps = 1/(elasped)   # compute fps
+            print('camera loop fps = {}'.format(fps))
+
             if (cv2.waitKey(1) & 0xff) == ord('q'):
                 break
         cap.release()
