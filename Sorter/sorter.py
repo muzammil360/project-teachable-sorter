@@ -125,6 +125,7 @@ def on_new_frame(cv_mat, engine, mean, sliding_window, send_over_ws, cam_sockets
             # send_over_ws(message, cam_sockets)
             # time.sleep(0.25) NOTE: debounce this at a rate depending on your singulation rate
             save_to_disk(cv_mat)
+            print('image saved to disk')
 
         elif (mode == 'sort'):
             classification_result = engine.ClassifyWithImage(img_pil)
