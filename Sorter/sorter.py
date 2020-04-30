@@ -31,6 +31,9 @@ import argparse
 import sys
 import RPi.GPIO as GPIO
 import time
+from datetime import datetime
+import os
+
 # Path to edgetpu compatible model
 model_path = '../model.tflite'
 
@@ -38,6 +41,7 @@ model_path = '../model.tflite'
 mode = "sort"
 sendPin = 7
 t0 = 0              # camera fps start
+output_dir = 'images'
 GPIO.setwarnings(False)
 GPIO.setmode(GPIO.BOARD)
 GPIO.setup(sendPin, GPIO.OUT, initial=GPIO.LOW)
@@ -49,6 +53,20 @@ def send_over_ws(msg, cam_sockets):
     print("cam_sockerts= {}".format(cam_sockets))
     for ws in cam_sockets:
         ws.write_message(msg)
+
+def save_to_disk(image):
+
+    # make image name
+    time_now = datetime.now()
+    time_now_str = time_now.strftime('%Y-%m-%dT%H:%M:%S.%f')
+
+    output_filename = 'image_'+time_now_str+'.jpg'
+    output_path = os.path.join(output_dir,output_filename)
+
+    # write image to disk
+    cv2.imwrite(output_path,image)
+
+
 
 def format_img_tm2(cv_mat):
     ret, buf = cv2.imencode('.jpg', cv_mat)
@@ -104,9 +122,9 @@ def on_new_frame(cv_mat, engine, mean, sliding_window, send_over_ws, cam_sockets
             message = dict()
             message['image'] = format_img_tm2(cv_mat)
             message['shouldTakePicture'] = True
-            send_over_ws(message, cam_sockets)
+            # send_over_ws(message, cam_sockets)
             # time.sleep(0.25) NOTE: debounce this at a rate depending on your singulation rate
-
+            save_to_disk(cv_mat)
 
         elif (mode == 'sort'):
             classification_result = engine.ClassifyWithImage(img_pil)
@@ -157,6 +175,9 @@ if __name__ == '__main__':
     elif args.biquad: filter_type = 'biquad'
     elif args.biquad2d: filter_type = 'biquad2d'
     elif args.center_of_mass: filter_type  = 'center_of_mass'
+
+    if not os.path.exists(output_dir):
+        os.mkdir(output_dir)
 
     mean = [None]
     sliding_window = []
